@@ -1,0 +1,36 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "db:migrate": "prisma migrate dev --name init",
+    "db:seed": "node prisma/seed.js",
+    "db:reset": "prisma migrate reset --force && node prisma/seed.js",
+    "db:verify": "node prisma/verify.js",
+    "dev": "tsx src/index.ts",
+    "index:backfill": "ts-node src/chain/backfill.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "@openzeppelin/contracts": "^5.6.1",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^22.7.5",
+    "hardhat": "^2.29.1",
+    "jest": "^30.5.2",
+    "ts-jest": "^29.4.14",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.22.0",
+    "ethers": "^6.17.0",
+    "openai": "^7.23.0",
+    "prisma": "^5.22.0"
+  }
+}

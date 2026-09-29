@@ -1,0 +1,124 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum OrgRole {
+  oem
+  supplier
+  factory
+  service
+  arbiter
+}
+
+enum PartStatus {
+  active
+  failed
+  retired
+}
+
+enum DocType {
+  invoice
+  warranty
+  service_report
+  purchase_order
+  inspection
+  label_photo
+}
+
+enum EventType {
+  register
+  transfer
+  install
+  service
+  claim
+  resolve
+  flag_suspect
+}
+
+enum ClaimStatus {
+  open
+  accepted
+  rejected
+  disputed
+}
+
+model Org {
+  id            String   @id @default(uuid())
+  name          String
+  role          OrgRole
+  walletAddress String   @unique
+  partsAsManufacturer Part[] @relation("Manufacturer")
+  partsAsOwner    Part[] @relation("Owner")
+  documents       Document[]
+  events          Event[]
+  claimsDecided   Claim[]
+}
+
+model Part {
+  id                  String   @id @default(uuid())
+  partId              String   @unique // e.g. "HP47291"
+  partNumber          String
+  batchId             String
+  manufacturerOrgId   String
+  manufacturer        Org      @relation("Manufacturer", fields: [manufacturerOrgId], references: [id])
+  currentOwnerOrgId   String
+  currentOwner        Org      @relation("Owner", fields: [currentOwnerOrgId], references: [id])
+  installedMachine    String?
+  status              PartStatus @default(active)
+  warrantyUntil       DateTime?
+  chainTxHash         String?
+  documents           Document[]
+  events              Event[]
+  claims              Claim[]
+
+  @@index([partId])
+}
+
+model Document {
+  id                String   @id @default(uuid())
+  partId            String
+  part              Part     @relation(fields: [partId], references: [id])
+  docType           DocType
+  storagePath       String
+  sha256            String
+  uploadedByOrgId   String
+  uploadedBy        Org      @relation(fields: [uploadedByOrgId], references: [id])
+  extracted         Json?
+  extractionModel   String?
+  confirmedAt       DateTime?
+}
+
+model Event {
+  id            String    @id @default(uuid())
+  partId        String
+  part          Part      @relation(fields: [partId], references: [id])
+  eventType     EventType
+  actorOrgId    String
+  actor         Org       @relation(fields: [actorOrgId], references: [id])
+  payload       Json
+  docHash       String?
+  txHash        String?   @unique
+  blockNumber   Int?
+  createdAt     DateTime  @default(now())
+
+  @@index([partId])
+  @@index([txHash])
+}
+
+model Claim {
+  id                  String      @id @default(uuid())
+  partId              String
+  part                Part        @relation(fields: [partId], references: [id])
+  status              ClaimStatus @default(open)
+  failureDescription  String
+  ruleResults         Json
+  evidence            Json
+  decidedByOrgId      String?
+  decidedBy           Org?        @relation(fields: [decidedByOrgId], references: [id])
+  createdAt           DateTime    @default(now())
+}

@@ -1,0 +1,24 @@
+{
+  "name": "partsure-ai",
+  "private": true,
+  "workspaces": [
+    "contracts",
+    "backend",
+    "frontend",
+    "mcp"
+  ],
+  "dependencies": {
+    "@fastify/cors": "^11.3.0",
+    "@mstblockchain/mst-sdk": "^1.0.0",
+    "@mstblockchain/mst-vibe-kit": "^0.1.1",
+    "dotenv": "^18.0.4",
+    "fastify": "^5.12.5",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "ethers": "^6.17.0",
+    "solc": "^0.8.37",
+    "typescript": "^7.0.2"
+  },
+  "type": "module"
+}
