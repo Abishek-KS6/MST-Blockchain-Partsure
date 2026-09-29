@@ -285,6 +285,7 @@ export default function SupplierPortal({
                   value={newPartId}
                   onChange={e => setNewPartId(e.target.value)}
                   required
+                  className="instrument-input"
                 />
                 <span className="field-hint">Must be unique across global MST ledger</span>
               </div>
@@ -297,6 +298,7 @@ export default function SupplierPortal({
                   value={newPartNumber}
                   onChange={e => setNewPartNumber(e.target.value)}
                   required
+                  className="instrument-input"
                 />
               </div>
 
@@ -308,12 +310,13 @@ export default function SupplierPortal({
                   value={newBatchId}
                   onChange={e => setNewBatchId(e.target.value)}
                   required
+                  className="instrument-input"
                 />
               </div>
 
               <div className="form-field-group">
                 <label>Alloy / Material Metallurgy</label>
-                <select value={alloySpec} onChange={e => setAlloySpec(e.target.value)}>
+                <select value={alloySpec} onChange={e => setAlloySpec(e.target.value)} className="instrument-input">
                   <option value="Ti-6Al-4V Grade 5 (AMS 4911)">Ti-6Al-4V Grade 5 (AMS 4911)</option>
                   <option value="Inconel 718 High-Temp Nickel">Inconel 718 High-Temp Nickel</option>
                   <option value="Silicon Nitride Si3N4 Ceramic">Silicon Nitride Si3N4 Ceramic</option>

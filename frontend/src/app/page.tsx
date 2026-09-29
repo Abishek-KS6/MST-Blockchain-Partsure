@@ -8,12 +8,21 @@ import IndustrialQRCode from '@/components/IndustrialQRCode';
 import QRVerificationModal from '@/components/QRVerificationModal';
 import SupplierPortal from '@/components/SupplierPortal';
 import CompanyAdminPortal from '@/components/CompanyAdminPortal';
+import LandingPageExperience from '@/components/LandingPageExperience';
+import {
+  ShieldCheck, Gear, Airplane, QrCode,
+  Circle, Stack, ClipboardText, BookOpen,
+  Globe, ArrowRight, X, Plus, FileText
+} from '@phosphor-icons/react';
 
 export type UserRole = 'protocol_admin' | 'supplier_oem' | 'enterprise_admin';
 type ConsoleView = 'studio' | 'registry' | 'tribunal' | 'ledger' | 'globe';
 type BlueprintMode = 'cad' | 'exploded' | 'telemetry' | 'thermal';
 
 export default function CoreApplication() {
+  // Public Website vs Operational Console Mode
+  const [appMode, setAppMode] = useState<'website' | 'console'>('website');
+
   // Multi-Role Console Architecture
   const [userRole, setUserRole] = useState<UserRole>('protocol_admin');
   const [showQRScanner, setShowQRScanner] = useState<boolean>(false);
@@ -193,19 +202,56 @@ export default function CoreApplication() {
 
   return (
     <div className="core-app">
-      <div className="app-backdrop" />
+      {/* Grain Noise Overlay */}
+      <div className="noise-overlay" aria-hidden="true" />
+      <div className="app-backdrop" aria-hidden="true" />
+      <div className="scan-line" aria-hidden="true" />
 
-      {/* ── Master Top Bar ── */}
-      <header className="core-top-bar">
-        <div className="top-bar-left">
-          <div className="brand-monogram">
-            <div className="brand-mark">P</div>
-            <div className="brand-name">
-              <span>PARTSURE</span>
-              <div className="brand-divider" />
-              <span className="brand-tag">PROTOCOL 01</span>
-            </div>
-          </div>
+      {appMode === 'website' ? (
+        <LandingPageExperience
+          parts={parts}
+          orgs={orgs}
+          claims={claims}
+          onLaunchConsole={() => setAppMode('console')}
+          onOpenQRScanner={() => setShowQRScanner(true)}
+          onViewCert={(part) => {
+            setSelectedPart(part);
+            setShowCertModal(true);
+          }}
+        />
+      ) : (
+        <>
+          {/* ── Master Top Bar ── */}
+          <header className="core-top-bar">
+            <div className="top-bar-left">
+              <button
+                className="btn-technical"
+                onClick={() => setAppMode('website')}
+                style={{
+                  marginRight: 12,
+                  padding: '6px 12px',
+                  fontSize: '0.72rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  color: 'var(--accent-cyan)'
+                }}
+                id="btn-back-to-website"
+              >
+                ← Public Website
+              </button>
+
+              <div className="brand-monogram">
+                {/* Double-Bezel Brand Mark */}
+                <div className="brand-mark-shell">
+                  <div className="brand-mark">P</div>
+                </div>
+                <div className="brand-name">
+                  <span>PARTSURE</span>
+                  <div className="brand-divider" />
+                  <span className="brand-tag">PROTOCOL 01</span>
+                </div>
+              </div>
 
           {/* Multi-Role Workspace Switcher */}
           <div className="role-switcher-wrap">
@@ -213,19 +259,19 @@ export default function CoreApplication() {
               className={`role-switch-btn ${userRole === 'protocol_admin' ? 'active' : ''}`}
               onClick={() => setUserRole('protocol_admin')}
             >
-              <span>🏛</span> PartSure Admin
+              <ShieldCheck size={13} weight="bold" /> Admin
             </button>
             <button
               className={`role-switch-btn supplier ${userRole === 'supplier_oem' ? 'active' : ''}`}
               onClick={() => setUserRole('supplier_oem')}
             >
-              <span>⚙</span> Supplier / OEM
+              <Gear size={13} weight="bold" /> Supplier
             </button>
             <button
               className={`role-switch-btn enterprise ${userRole === 'enterprise_admin' ? 'active' : ''}`}
               onClick={() => setUserRole('enterprise_admin')}
             >
-              <span>✈</span> Enterprise Fleet
+              <Airplane size={13} weight="bold" /> Fleet
             </button>
           </div>
 
@@ -234,32 +280,37 @@ export default function CoreApplication() {
               <button
                 className={`mode-tab-btn ${view === 'studio' ? 'active' : ''}`}
                 onClick={() => setView('studio')}
+                id="tab-studio"
               >
-                Studio Console
+                <Stack size={13} /> Studio
               </button>
               <button
                 className={`mode-tab-btn ${view === 'registry' ? 'active' : ''}`}
                 onClick={() => setView('registry')}
+                id="tab-registry"
               >
-                Fleet Registry <span className="mode-count-badge">{parts.length}</span>
+                <ClipboardText size={13} /> Registry <span className="mode-count-badge">{parts.length}</span>
               </button>
               <button
                 className={`mode-tab-btn ${view === 'tribunal' ? 'active' : ''}`}
                 onClick={() => setView('tribunal')}
+                id="tab-tribunal"
               >
-                Warranty Tribunal {stats && stats.openClaims > 0 && <span className="mode-count-badge" style={{ color: 'var(--accent-rose)' }}>{stats.openClaims}</span>}
+                <BookOpen size={13} /> Tribunal {stats && stats.openClaims > 0 && <span className="mode-count-badge" style={{ color: 'var(--accent-rose)' }}>{stats.openClaims}</span>}
               </button>
               <button
                 className={`mode-tab-btn ${view === 'ledger' ? 'active' : ''}`}
                 onClick={() => setView('ledger')}
+                id="tab-ledger"
               >
-                Ledger Audit
+                <FileText size={13} /> Ledger
               </button>
               <button
                 className={`mode-tab-btn ${view === 'globe' ? 'active' : ''}`}
                 onClick={() => setView('globe')}
+                id="tab-globe"
               >
-                3D Fleet Globe
+                <Globe size={13} /> Globe
               </button>
             </div>
           )}
@@ -267,11 +318,12 @@ export default function CoreApplication() {
 
         <div className="top-bar-right">
           <button
-            className="btn-technical"
+            className="btn-technical btn-technical-cyan"
             onClick={() => setShowQRScanner(true)}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, borderColor: 'var(--accent-cyan)', color: 'var(--accent-cyan)' }}
+            id="btn-qr-scanner"
           >
-            <span>⚲</span> QR Scanner
+            <QrCode size={14} weight="bold" />
+            <span>Scan QR</span>
           </button>
 
           <div className="network-status-badge">
@@ -286,6 +338,7 @@ export default function CoreApplication() {
           <button
             className="btn-technical btn-technical-danger"
             onClick={() => setShowClaimModal(true)}
+            id="btn-log-claim"
           >
             Log Claim
           </button>
@@ -293,40 +346,26 @@ export default function CoreApplication() {
           <button
             className="btn-technical btn-technical-primary"
             onClick={() => setShowRegisterModal(true)}
+            id="btn-register-asset"
           >
-            + Register Asset
+            <Plus size={14} weight="bold" />
+            Register Asset
           </button>
         </div>
       </header>
 
       {/* Notification Toast */}
       {notification && (
-        <div
-          style={{
-            position: 'fixed',
-            bottom: 24,
-            right: 24,
-            background: 'var(--bg-card)',
-            border: '1px solid var(--border-card)',
-            borderRadius: 'var(--radius-sm)',
-            padding: '12px 18px',
-            fontFamily: 'var(--font-mono)',
-            fontSize: '0.8rem',
-            color: 'var(--text-pure)',
-            zIndex: 999,
-            boxShadow: 'var(--shadow-md)',
-          }}
-        >
+        <div className="toast-notification" role="status" aria-live="polite">
           {notification}
         </div>
       )}
 
       {/* ── Main View Content ── */}
       {loading ? (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 'calc(100vh - 58px)' }}>
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-            INITIALIZING ASSET REPOSITORY...
-          </div>
+        <div className="loading-state">
+          <div className="loading-spinner" />
+          <div className="loading-text">Initializing Asset Repository</div>
         </div>
       ) : !apiOnline ? (
         <div style={{ padding: 48, textAlign: 'center' }}>
@@ -341,8 +380,8 @@ export default function CoreApplication() {
           </button>
         </div>
       ) : (
-        <>
-          {userRole === 'supplier_oem' && (
+        <main className="core-main-viewport" key={userRole}>
+          {userRole === 'supplier_oem' ? (
             <SupplierPortal
               parts={parts}
               orgs={orgs}
@@ -350,9 +389,7 @@ export default function CoreApplication() {
               onSelectPart={handleSelectPart}
               notify={notify}
             />
-          )}
-
-          {userRole === 'enterprise_admin' && (
+          ) : userRole === 'enterprise_admin' ? (
             <CompanyAdminPortal
               parts={parts}
               orgs={orgs}
@@ -361,10 +398,8 @@ export default function CoreApplication() {
               onOpenQRScanner={() => setShowQRScanner(true)}
               notify={notify}
             />
-          )}
-
-          {userRole === 'protocol_admin' && (
-            <>
+          ) : (
+            <div className="protocol-admin-viewport" key={view}>
               {view === 'studio' && selectedPart && (
             <div className="studio-layout">
               {/* ── PANE 1: Directory ── */}
@@ -465,8 +500,9 @@ export default function CoreApplication() {
                   </div>
                 </div>
 
-                {/* Technical Blueprint CAD Viewport */}
+                {/* Technical Blueprint CAD Viewport — Double-Bezel */}
                 <div className="blueprint-card">
+                  <div className="blueprint-card-inner">
                   <div className="blueprint-toolbar">
                     <div className="blueprint-mode-selector">
                       <div style={{ display: 'inline-flex', alignItems: 'center', background: 'rgba(0,0,0,0.5)', borderRadius: 'var(--radius-xs)', padding: '2px', marginRight: 10, border: '1px solid var(--border-subtle)' }}>
@@ -474,7 +510,7 @@ export default function CoreApplication() {
                           className={`blueprint-mode-btn ${is3DMode ? 'active' : ''}`}
                           onClick={() => setIs3DMode(true)}
                           style={{
-                            color: is3DMode ? 'var(--accent-cyan)' : 'var(--text-muted)',
+                            color: is3DMode ? 'var(--accent-primary)' : 'var(--text-muted)',
                             fontWeight: is3DMode ? 700 : 400,
                             display: 'flex',
                             alignItems: 'center',
@@ -580,7 +616,7 @@ export default function CoreApplication() {
 
                             {/* Layer 3: Rotor / Stator Core (Center) */}
                             <g opacity={activeSubsystem === 'rotor' ? 1 : 0.7}>
-                              <circle cx="260" cy="120" r="38" stroke="var(--accent-cyan)" strokeWidth={activeSubsystem === 'rotor' ? 2 : 1.2} fill={activeSubsystem === 'rotor' ? 'rgba(56, 189, 248, 0.2)' : 'none'} />
+                              <circle cx="260" cy="120" r="38" stroke="var(--accent-primary)" strokeWidth={activeSubsystem === 'rotor' ? 2 : 1.2} fill={activeSubsystem === 'rotor' ? 'rgba(56, 189, 248, 0.2)' : 'none'} />
                               <circle cx="260" cy="120" r="16" stroke="#38bdf8" strokeWidth="1" />
                               <text x="240" y="68" fill="#38bdf8" fontSize="8" fontFamily="JetBrains Mono">L3: ROTOR</text>
                             </g>
@@ -606,7 +642,7 @@ export default function CoreApplication() {
                             <rect x="140" y="70" width="240" height="100" rx="4" stroke="rgba(255, 255, 255, 0.3)" strokeWidth="1" />
                             <circle cx="260" cy="120" r="35" stroke="rgba(255, 255, 255, 0.2)" strokeWidth="1" />
                             <g>
-                              <circle cx="200" cy="100" r="5" fill="var(--accent-cyan)" />
+                              <circle cx="200" cy="100" r="5" fill="var(--accent-primary)" />
                               <text x="212" y="103" fill="#38bdf8" fontSize="8" fontFamily="JetBrains Mono">T1: 1,420°C [NOMINAL]</text>
                             </g>
                             <g>
@@ -754,6 +790,7 @@ export default function CoreApplication() {
                     </div>
                   )}
                 </div>
+                </div> {/* blueprint-card-inner */}
 
                 {/* Exploded Subsystem Layer Selector Chips */}
                 {blueprintMode === 'exploded' && (
@@ -774,74 +811,89 @@ export default function CoreApplication() {
                   </div>
                 )}
 
-                {/* Predictive Fatigue Forecast Cards */}
+                {/* Predictive Fatigue Forecast Cards — Double-Bezel */}
                 {blueprintMode === 'thermal' && (
                   <div className="stress-telemetry-forecast" style={{ marginBottom: 20 }}>
                     <div className="forecast-metric-card">
-                      <div className="forecast-label">Von Mises Peak Stress</div>
-                      <div className="forecast-value" style={{ color: stressMetrics.isCritical ? 'var(--accent-rose)' : 'var(--text-pure)' }}>
-                        {stressMetrics.vonMises} MPa
-                      </div>
-                      <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
-                        Yield Threshold: {stressMetrics.maxYield} MPa
-                      </div>
-                    </div>
-
-                    <div className="forecast-metric-card">
-                      <div className="forecast-label">AI Fatigue Duty Lifetime</div>
-                      <div className="forecast-value" style={{ color: stressMetrics.remainingHours < 2000 ? 'var(--accent-amber)' : 'var(--accent-emerald)' }}>
-                        {stressMetrics.remainingHours.toLocaleString()} Operating Hrs
-                      </div>
-                      <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
-                        Based on AS9100 S-N Wöhler Curve
+                      <div className="forecast-metric-inner">
+                        <div className="forecast-label">Von Mises Peak Stress</div>
+                        <div className="forecast-value" style={{ color: stressMetrics.isCritical ? 'var(--accent-rose)' : 'var(--text-pure)' }}>
+                          {stressMetrics.vonMises} MPa
+                        </div>
+                        <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: 2 }}>
+                          Yield: {stressMetrics.maxYield} MPa
+                        </div>
                       </div>
                     </div>
 
                     <div className="forecast-metric-card">
-                      <div className="forecast-label">Delamination Void Risk</div>
-                      <div className="forecast-value" style={{ color: stressMetrics.delaminationRisk !== '<0.04%' ? 'var(--accent-rose)' : 'var(--accent-emerald)' }}>
-                        {stressMetrics.delaminationRisk}
+                      <div className="forecast-metric-inner">
+                        <div className="forecast-label">AI Fatigue Lifetime</div>
+                        <div className="forecast-value" style={{ color: stressMetrics.remainingHours < 2000 ? 'var(--accent-amber)' : 'var(--accent-emerald)' }}>
+                          {stressMetrics.remainingHours.toLocaleString()} hrs
+                        </div>
+                        <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: 2 }}>
+                          AS9100 Wöhler Curve
+                        </div>
                       </div>
-                      <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
-                        Ultrasonic PAUT Probability
+                    </div>
+
+                    <div className="forecast-metric-card">
+                      <div className="forecast-metric-inner">
+                        <div className="forecast-label">Delamination Risk</div>
+                        <div className="forecast-value" style={{ color: stressMetrics.delaminationRisk !== '<0.04%' ? 'var(--accent-rose)' : 'var(--accent-emerald)' }}>
+                          {stressMetrics.delaminationRisk}
+                        </div>
+                        <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: 2 }}>
+                          PAUT Probability
+                        </div>
                       </div>
                     </div>
                   </div>
                 )}
 
-                {/* 4-Column Specification Matrix Deck */}
+                {/* 4-Column Specification Matrix Deck — Double-Bezel */}
                 <div className="specs-deck-grid">
                   <div className="spec-cell">
-                    <div className="spec-cell-label">Metallurgical Alloy</div>
-                    <div className="spec-cell-value">Ti-Alloy Grade 5</div>
-                    <div className="spec-cell-sub">AS9100D Certified</div>
-                  </div>
-
-                  <div className="spec-cell">
-                    <div className="spec-cell-label">Operating Duty</div>
-                    <div className="spec-cell-value">
-                      {selectedPart._count?.events ? `${selectedPart._count.events * 850} hrs` : '3,450 hrs'}
+                    <div className="spec-cell-inner">
+                      <div className="spec-cell-label">Metallurgical Alloy</div>
+                      <div className="spec-cell-value">Ti-Alloy Grade 5</div>
+                      <div className="spec-cell-sub">AS9100D Certified</div>
                     </div>
-                    <div className="spec-cell-sub">Rated for 15,000 hrs</div>
                   </div>
 
                   <div className="spec-cell">
-                    <div className="spec-cell-label">Warranty SLA</div>
-                    <div className="spec-cell-value">{formatDate(selectedPart.warrantyUntil)}</div>
-                    <div className="spec-cell-sub">Smart Contract Bound</div>
-                  </div>
-
-                  <div className="spec-cell">
-                    <div className="spec-cell-label">MST Ledger Provenance</div>
-                    <div className="spec-cell-value" style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem' }}>
-                      {truncHash(selectedPart.chainTxHash)}
+                    <div className="spec-cell-inner">
+                      <div className="spec-cell-label">Operating Duty</div>
+                      <div className="spec-cell-value">
+                        {selectedPart._count?.events ? `${selectedPart._count.events * 850} hrs` : '3,450 hrs'}
+                      </div>
+                      <div className="spec-cell-sub">Rated for 15,000 hrs</div>
                     </div>
-                    <div className="spec-cell-sub">100% Cryptographic Match</div>
+                  </div>
+
+                  <div className="spec-cell">
+                    <div className="spec-cell-inner">
+                      <div className="spec-cell-label">Warranty SLA</div>
+                      <div className="spec-cell-value">{formatDate(selectedPart.warrantyUntil)}</div>
+                      <div className="spec-cell-sub">Smart Contract Bound</div>
+                    </div>
+                  </div>
+
+                  <div className="spec-cell">
+                    <div className="spec-cell-inner">
+                      <div className="spec-cell-label">MST Ledger Provenance</div>
+                      <div className="spec-cell-value" style={{ fontFamily: 'var(--font-mono)', fontSize: '0.82rem' }}>
+                        {truncHash(selectedPart.chainTxHash)}
+                      </div>
+                      <div className="spec-cell-sub">100% Cryptographic Match</div>
+                    </div>
                   </div>
                 </div>
 
-                {/* FEATURE 3: Cryptographic Merkle Tree Visualizer */}
+                {/* FEATURE 3: Cryptographic Merkle Tree Visualizer — Double-Bezel */}
                 <div className="merkle-tree-container">
+                  <div className="merkle-tree-inner">
                   <div className="merkle-tree-header">
                     <div>
                       <h4 style={{ fontFamily: 'var(--font-display)', fontSize: '0.9rem', color: 'var(--text-pure)' }}>
@@ -863,9 +915,9 @@ export default function CoreApplication() {
 
                   <div className="merkle-graph">
                     {/* Root Node */}
-                    <div className="merkle-root-node">
+                    <div className="merkle-root-node data-pulse">
                       <div className="merkle-node-tag">MST MERKLE ROOT</div>
-                      <div className="merkle-hash-text" style={{ color: 'var(--accent-cyan)' }}>
+                      <div className="merkle-hash-text" style={{ color: 'var(--accent-primary)' }}>
                         {selectedPart.chainTxHash || '0x7b4a2f8c9e1029384756abcdef9876543210'}
                       </div>
                     </div>
@@ -901,11 +953,13 @@ export default function CoreApplication() {
                         <div className="merkle-hash-text">0x2f11...88ab</div>
                       </div>
                     </div>
-                  </div>
+                   </div>
+                  </div> {/* merkle-tree-inner */}
                 </div>
 
-                {/* Attached Cryptographic Documents Vault */}
+                {/* Attached Cryptographic Documents Vault — Double-Bezel */}
                 <div className="documents-vault-card">
+                  <div className="documents-vault-inner">
                   <div className="documents-vault-header">
                     <span>Cryptographically Anchored Documents</span>
                     <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--text-muted)' }}>
@@ -924,10 +978,11 @@ export default function CoreApplication() {
                       </div>
                     ))
                   ) : (
-                    <div style={{ color: 'var(--text-muted)', fontSize: '0.78rem' }}>
+                    <div style={{ color: 'var(--text-muted)', fontSize: '0.76rem' }}>
                       No archived documents attached to this component.
                     </div>
                   )}
+                  </div> {/* documents-vault-inner */}
                 </div>
               </main>
 
@@ -1046,10 +1101,8 @@ export default function CoreApplication() {
             <div className="fleet-matrix-view">
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
                 <div>
-                  <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem', fontWeight: 800, color: 'var(--text-pure)' }}>
-                    Fleet Asset Registry
-                  </h2>
-                  <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                  <h2 className="fleet-view-heading">Fleet Asset Registry</h2>
+                  <p className="fleet-view-sub">
                     All registered precision components recorded across the MST provenance ledger.
                   </p>
                 </div>
@@ -1057,7 +1110,7 @@ export default function CoreApplication() {
                   <input
                     type="text"
                     className="directory-search-input"
-                    style={{ width: 260 }}
+                    style={{ width: 240 }}
                     placeholder="Filter registry..."
                     value={searchQuery}
                     onChange={e => setSearchQuery(e.target.value)}
@@ -1066,6 +1119,7 @@ export default function CoreApplication() {
               </div>
 
               <div className="fleet-table-card">
+                <div className="fleet-table-card-inner">
                 <table className="fleet-table">
                   <thead>
                     <tr>
@@ -1121,6 +1175,7 @@ export default function CoreApplication() {
                     ))}
                   </tbody>
                 </table>
+                </div> {/* fleet-table-card-inner */}
               </div>
             </div>
           )}
@@ -1129,11 +1184,9 @@ export default function CoreApplication() {
           {view === 'tribunal' && (
             <div className="fleet-matrix-view">
               <div style={{ marginBottom: 20 }}>
-                <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem', fontWeight: 800, color: 'var(--text-pure)' }}>
-                  Warranty Dispute Tribunal
-                </h2>
-                <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                  Formal legal & engineering warranty arbitration cases audited by NVIDIA NIM AI Oracle.
+                <h2 className="fleet-view-heading">Warranty Dispute Tribunal</h2>
+                <p className="fleet-view-sub">
+                  Engineering warranty arbitration cases audited by AI Oracle.
                 </p>
               </div>
 
@@ -1148,7 +1201,8 @@ export default function CoreApplication() {
                   };
 
                   return (
-                    <div key={claim.id} className="fleet-table-card" style={{ padding: 22 }}>
+                    <div key={claim.id} className="fleet-table-card">
+                    <div className="fleet-table-card-inner" style={{ padding: 22 }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
                         <span className={`claim-forensic-status ${claim.status}`}>{claim.status}</span>
                         <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--text-muted)' }}>
@@ -1207,6 +1261,7 @@ export default function CoreApplication() {
                         </div>
                       )}
                     </div>
+                    </div>
                   );
                 })}
               </div>
@@ -1217,15 +1272,14 @@ export default function CoreApplication() {
           {view === 'ledger' && (
             <div className="fleet-matrix-view">
               <div style={{ marginBottom: 20 }}>
-                <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem', fontWeight: 800, color: 'var(--text-pure)' }}>
-                  MST Consensus Ledger Audit
-                </h2>
-                <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                <h2 className="fleet-view-heading">MST Consensus Ledger Audit</h2>
+                <p className="fleet-view-sub">
                   Immutable cryptographic chain transactions verifying lifecycle state changes.
                 </p>
               </div>
 
               <div className="fleet-table-card">
+                <div className="fleet-table-card-inner">
                 <table className="fleet-table">
                   <thead>
                     <tr>
@@ -1243,7 +1297,7 @@ export default function CoreApplication() {
                         <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, color: 'var(--text-pure)' }}>
                           #{ev.blockNumber || blockNumber - i}
                         </td>
-                        <td style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-cyan)' }}>
+                        <td style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-primary)' }}>
                           {truncHash(ev.txHash)}
                         </td>
                         <td>
@@ -1264,6 +1318,7 @@ export default function CoreApplication() {
                     ))}
                   </tbody>
                 </table>
+                </div> {/* fleet-table-card-inner */}
               </div>
             </div>
           )}
@@ -1273,11 +1328,9 @@ export default function CoreApplication() {
             <div className="globe-view-container">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
                 <div>
-                  <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-pure)' }}>
-                    Planetary Asset Fleet // 3D WebGL Orbital View
-                  </h2>
-                  <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                    Live spherical telemetry mapping certified mission-critical components deployed across global aerospace corridors, defense bases, and cleanrooms. Drag to rotate globe.
+                  <h2 className="fleet-view-heading">Planetary Asset Fleet — 3D Orbital View</h2>
+                  <p className="fleet-view-sub">
+                    Live WebGL telemetry mapping mission-critical components across global aerospace and defense corridors.
                   </p>
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
@@ -1292,14 +1345,16 @@ export default function CoreApplication() {
                       }
                     }}
                   >
-                    Launch 3D CAD Twin Console →
+                    Launch 3D Twin
+                    <div className="btn-icon-ring"><ArrowRight size={10} weight="bold" /></div>
                   </button>
                 </div>
               </div>
 
               <div className="globe-main-grid">
-                {/* 3D WebGL Globe Viewport */}
+                {/* 3D WebGL Globe Viewport — Double-Bezel */}
                 <div className="globe-viewport-card">
+                  <div className="globe-viewport-inner">
                   <FleetGlobe3D
                     onSelectPart={(partId) => {
                       const found = parts.find(p => p.partId === partId);
@@ -1311,6 +1366,7 @@ export default function CoreApplication() {
                       }
                     }}
                   />
+                  </div> {/* globe-viewport-inner */}
                 </div>
 
                 {/* Right Telemetry Column */}
@@ -1318,7 +1374,7 @@ export default function CoreApplication() {
                   <div className="globe-stat-banner">
                     <div className="globe-stat-pill">
                       <div className="globe-stat-label">DEPLOYED SITES</div>
-                      <div className="globe-stat-val" style={{ color: 'var(--accent-cyan)' }}>8 NODES</div>
+                      <div className="globe-stat-val" style={{ color: 'var(--accent-primary)' }}>8 NODES</div>
                     </div>
                     <div className="globe-stat-pill">
                       <div className="globe-stat-label">FLEET HEALTH</div>
@@ -1331,9 +1387,8 @@ export default function CoreApplication() {
                   </div>
 
                   <div className="deployment-nodes-list">
-                    <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: 4, letterSpacing: '0.5px' }}>
-                      GLOBAL ACTIVE DEPLOYMENT NODES
-                    </div>
+                    <div className="deployment-nodes-inner">
+                    <div className="deployment-nodes-label">Global Active Nodes</div>
 
                     {[
                       { name: 'Boeing EcoDemonstrator', location: 'Seattle, USA', partId: 'HP47291', status: 'active', temp: '1,420°C', hours: '4,820 hrs' },
@@ -1371,13 +1426,16 @@ export default function CoreApplication() {
                         </button>
                       </div>
                     ))}
+                    </div> {/* deployment-nodes-inner */}
                   </div>
                 </div>
               </div>
             </div>
           )}
-            </>
+            </div>
           )}
+        </main>
+      )}
         </>
       )}
 
@@ -1436,22 +1494,40 @@ export default function CoreApplication() {
                   <div>{selectedPart.partNumber} / {selectedPart.batchId}</div>
                 </div>
                 <div className="cert-field-item">
-                  <label>Manufacturing OEM</label>
-                  <div>{selectedPart.manufacturer?.name}</div>
+                  <label>Manufacture Date & Shift</label>
+                  <div style={{ fontWeight: 700, color: '#0f172a' }}>14-MAR-2024 (Shift 1 // 08:30 UTC)</div>
+                </div>
+                <div className="cert-field-item">
+                  <label>Airworthiness Warranty Period</label>
+                  <div style={{ fontWeight: 700, color: '#059669' }}>
+                    VALID UNTIL {selectedPart.warrantyUntil ? new Date(selectedPart.warrantyUntil).toLocaleDateString() : '31-DEC-2028'} (ACTIVE)
+                  </div>
+                </div>
+                <div className="cert-field-item">
+                  <label>Manufacturing OEM & CAGE</label>
+                  <div>{selectedPart.manufacturer?.name || 'Apex Aerospace Technologies'} (CAGE: C4921)</div>
                 </div>
                 <div className="cert-field-item">
                   <label>Current Legal Custodian</label>
-                  <div>{selectedPart.currentOwner?.name}</div>
+                  <div>{selectedPart.currentOwner?.name || 'Global Aero Fleet Services Inc.'}</div>
+                </div>
+                <div className="cert-field-item">
+                  <label>Metallurgy & Alloy Specification</label>
+                  <div>AMS 4911 / ASTM B265 (Ti-6Al-4V Grade 5)</div>
+                </div>
+                <div className="cert-field-item">
+                  <label>Operating Hours / Life Limit (LLP)</label>
+                  <div>4,820 / 20,000 hrs (24.1% Consumed)</div>
                 </div>
                 <div className="cert-field-item">
                   <label>MST Blockchain Block Hash</label>
-                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem' }}>
+                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.72rem' }}>
                     {selectedPart.chainTxHash || '0x7b4a2f8c9e1029384756abcdef9876543210'}
                   </div>
                 </div>
                 <div className="cert-field-item">
-                  <label>NDT Ultrasonic Porosity Scan</label>
-                  <div style={{ color: '#059669' }}>✓ VERIFIED ZERO VOIDS (Ra 0.18)</div>
+                  <label>NDT Ultrasonic & Tomography Scan</label>
+                  <div style={{ color: '#059669', fontWeight: 700 }}>✓ VERIFIED ZERO VOIDS (Class A1 / Ra 0.18)</div>
                 </div>
               </div>
 
@@ -1494,8 +1570,9 @@ export default function CoreApplication() {
       {showRegisterModal && (
         <div className="modal-overlay" onClick={() => setShowRegisterModal(false)}>
           <div className="modal-dialog" onClick={e => e.stopPropagation()}>
+            <div className="modal-dialog-inner">
             <div className="modal-dialog-header">
-              <h3>Register New Industrial Asset</h3>
+              <h3>Register Asset</h3>
               <button className="modal-close-icon" onClick={() => setShowRegisterModal(false)}>✕</button>
             </div>
             <form
@@ -1578,10 +1655,11 @@ export default function CoreApplication() {
                   Cancel
                 </button>
                 <button type="submit" className="btn-technical btn-technical-primary" style={{ flex: 2 }}>
-                  Mint Blockchain Passport
+                  Mint Passport
                 </button>
               </div>
             </form>
+            </div> {/* modal-dialog-inner */}
           </div>
         </div>
       )}
@@ -1590,9 +1668,10 @@ export default function CoreApplication() {
       {showClaimModal && (
         <div className="modal-overlay" onClick={() => setShowClaimModal(false)}>
           <div className="modal-dialog" onClick={e => e.stopPropagation()}>
+            <div className="modal-dialog-inner">
             <div className="modal-dialog-header">
               <h3>Log Warranty Incident</h3>
-              <button className="modal-close-icon" onClick={() => setShowClaimModal(false)}>✕</button>
+              <button className="modal-close-icon" onClick={() => setShowClaimModal(false)}><X size={12} /></button>
             </div>
             <form
               className="modal-form-body"
@@ -1649,6 +1728,7 @@ export default function CoreApplication() {
                 </button>
               </div>
             </form>
+            </div> {/* modal-dialog-inner */}
           </div>
         </div>
       )}
