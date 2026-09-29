@@ -9,6 +9,7 @@ import QRVerificationModal from '@/components/QRVerificationModal';
 import SupplierPortal from '@/components/SupplierPortal';
 import CompanyAdminPortal from '@/components/CompanyAdminPortal';
 import LandingPageExperience from '@/components/LandingPageExperience';
+import { getProductMetadata } from '@/lib/productMetadata';
 import {
   ShieldCheck, Gear, Airplane, QrCode,
   Circle, Stack, ClipboardText, BookOpen,
@@ -189,14 +190,12 @@ export default function CoreApplication() {
     return claims.find(c => c.partId === selectedPart.id || c.part?.partId === selectedPart.partId) || null;
   }, [claims, selectedPart]);
 
-  // Subsystem definitions for Exploded-View CAD
-  const subsystems = [
-    { id: 'casing', name: 'External Titanium Shield', alloy: 'Ti-6Al-4V Grade 5', tolerance: '±0.005mm', layer: 'Outer Cowling' },
-    { id: 'manifold', name: 'High-Pressure Flow Manifold', alloy: 'Inconel 718 Superalloy', tolerance: '±0.002mm', layer: 'Pressure Chamber' },
-    { id: 'rotor', name: 'Single-Crystal Rotor Core', alloy: 'C/C-SiC Matrix Composite', tolerance: '±0.001mm', layer: 'Rotational Matrix' },
-    { id: 'bearings', name: 'Ceramic Hybrid Race', alloy: 'Silicon Nitride (Si3N4)', tolerance: '±0.0005mm', layer: 'Low-Friction Race' },
-    { id: 'sensor', name: 'Optical Telemetry Core', alloy: 'Fused Silica Fiber Bragg', tolerance: '±0.001mm', layer: 'Sensor Substrate' },
-  ];
+  // Dynamic Subsystems and Specifications for Current Selected Part
+  const currentProductMeta = useMemo(() => {
+    return getProductMetadata(selectedPart?.partId || 'HP47291', selectedPart);
+  }, [selectedPart]);
+
+  const subsystems = currentProductMeta.subsystems;
 
   const explodeOffset = (disassemblyProgress / 100) * 45;
 
@@ -852,13 +851,17 @@ export default function CoreApplication() {
                   </div>
                 )}
 
-                {/* 4-Column Specification Matrix Deck — Double-Bezel */}
+                {/* 4-Column Specification Matrix Deck — Dynamic Product Telemetry */}
                 <div className="specs-deck-grid">
                   <div className="spec-cell">
                     <div className="spec-cell-inner">
                       <div className="spec-cell-label">Metallurgical Alloy</div>
-                      <div className="spec-cell-value">Ti-Alloy Grade 5</div>
-                      <div className="spec-cell-sub">AS9100D Certified</div>
+                      <div className="spec-cell-value" title={currentProductMeta.metallurgyAlloy}>
+                        {currentProductMeta.metallurgyAlloy.length > 24
+                          ? `${currentProductMeta.metallurgyAlloy.slice(0, 24)}…`
+                          : currentProductMeta.metallurgyAlloy}
+                      </div>
+                      <div className="spec-cell-sub">{currentProductMeta.alloyStandard}</div>
                     </div>
                   </div>
 
@@ -866,17 +869,21 @@ export default function CoreApplication() {
                     <div className="spec-cell-inner">
                       <div className="spec-cell-label">Operating Duty</div>
                       <div className="spec-cell-value">
-                        {selectedPart._count?.events ? `${selectedPart._count.events * 850} hrs` : '3,450 hrs'}
+                        {currentProductMeta.operatingHours.toLocaleString()} hrs
                       </div>
-                      <div className="spec-cell-sub">Rated for 15,000 hrs</div>
+                      <div className="spec-cell-sub">
+                        Rated for {currentProductMeta.ratedLifeHours.toLocaleString()} hrs ({Math.round((currentProductMeta.operatingHours / currentProductMeta.ratedLifeHours) * 100)}% Used)
+                      </div>
                     </div>
                   </div>
 
                   <div className="spec-cell">
                     <div className="spec-cell-inner">
                       <div className="spec-cell-label">Warranty SLA</div>
-                      <div className="spec-cell-value">{formatDate(selectedPart.warrantyUntil)}</div>
-                      <div className="spec-cell-sub">Smart Contract Bound</div>
+                      <div className="spec-cell-value">{currentProductMeta.warrantyUntil}</div>
+                      <div className="spec-cell-sub" style={{ color: 'var(--accent-emerald)' }}>
+                        {currentProductMeta.warrantyStatus}
+                      </div>
                     </div>
                   </div>
 
@@ -886,7 +893,7 @@ export default function CoreApplication() {
                       <div className="spec-cell-value" style={{ fontFamily: 'var(--font-mono)', fontSize: '0.82rem' }}>
                         {truncHash(selectedPart.chainTxHash)}
                       </div>
-                      <div className="spec-cell-sub">100% Cryptographic Match</div>
+                      <div className="spec-cell-sub">{currentProductMeta.standards}</div>
                     </div>
                   </div>
                 </div>
@@ -1495,17 +1502,19 @@ export default function CoreApplication() {
                 </div>
                 <div className="cert-field-item">
                   <label>Manufacture Date & Shift</label>
-                  <div style={{ fontWeight: 700, color: '#0f172a' }}>14-MAR-2024 (Shift 1 // 08:30 UTC)</div>
+                  <div style={{ fontWeight: 700, color: '#0f172a' }}>
+                    {currentProductMeta.manufactureDate} ({currentProductMeta.manufacturePlant})
+                  </div>
                 </div>
                 <div className="cert-field-item">
                   <label>Airworthiness Warranty Period</label>
                   <div style={{ fontWeight: 700, color: '#059669' }}>
-                    VALID UNTIL {selectedPart.warrantyUntil ? new Date(selectedPart.warrantyUntil).toLocaleDateString() : '31-DEC-2028'} (ACTIVE)
+                    VALID UNTIL {currentProductMeta.warrantyUntil} ({currentProductMeta.warrantyStatus})
                   </div>
                 </div>
                 <div className="cert-field-item">
                   <label>Manufacturing OEM & CAGE</label>
-                  <div>{selectedPart.manufacturer?.name || 'Apex Aerospace Technologies'} (CAGE: C4921)</div>
+                  <div>{selectedPart.manufacturer?.name || 'Apex Aerospace Technologies'} (CAGE: {currentProductMeta.cageCode})</div>
                 </div>
                 <div className="cert-field-item">
                   <label>Current Legal Custodian</label>
@@ -1513,11 +1522,13 @@ export default function CoreApplication() {
                 </div>
                 <div className="cert-field-item">
                   <label>Metallurgy & Alloy Specification</label>
-                  <div>AMS 4911 / ASTM B265 (Ti-6Al-4V Grade 5)</div>
+                  <div>{currentProductMeta.metallurgyAlloy} ({currentProductMeta.alloyStandard})</div>
                 </div>
                 <div className="cert-field-item">
                   <label>Operating Hours / Life Limit (LLP)</label>
-                  <div>4,820 / 20,000 hrs (24.1% Consumed)</div>
+                  <div>
+                    {currentProductMeta.operatingHours.toLocaleString()} / {currentProductMeta.ratedLifeHours.toLocaleString()} hrs ({Math.round((currentProductMeta.operatingHours / currentProductMeta.ratedLifeHours) * 100)}% Consumed)
+                  </div>
                 </div>
                 <div className="cert-field-item">
                   <label>MST Blockchain Block Hash</label>

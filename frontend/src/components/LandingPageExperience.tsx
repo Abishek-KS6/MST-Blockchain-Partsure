@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { Part, Org, Claim } from '@/lib/api';
+import { getProductMetadata } from '@/lib/productMetadata';
 import CADViewer3D from './CADViewer3D';
 import FleetGlobe3D from './FleetGlobe3D';
 import {
@@ -49,141 +50,129 @@ export default function LandingPageExperience({
     walletAddress: '0xabcdef1234567890abcdef1234567890abcdef12',
   };
 
-  const sampleParts: Part[] = parts.length > 0 ? parts.slice(0, 3) : [
+  const defaultSampleParts: Part[] = [
     {
       id: 'demo-1',
-      partId: 'CFM56-HPT-0921',
-      partNumber: 'AN-7702-TI',
-      batchId: 'BATCH-2024-08A',
+      partId: 'HP47291',
+      partNumber: 'PN-AERO-47291-B',
+      batchId: 'BATCH-AERO-2024-Q3',
       manufacturerOrgId: 'org-oem',
       currentOwnerOrgId: 'org-airline',
-      installedMachine: 'BOEING 737-800 // N782AA',
+      installedMachine: 'Boeing EcoDemonstrator // LH2 Fuel Cell',
       status: 'active',
-      warrantyUntil: '2028-12-31',
+      warrantyUntil: '2027-11-15',
       chainTxHash: '0x8f2d9c1b4e6a7350f0c2e8a1d4b6c8e0a2f4c6e8',
       manufacturer: defaultOrgOEM,
       currentOwner: defaultOrgFleet,
     },
     {
       id: 'demo-2',
-      partId: 'GE90-CRYO-VALVE-44',
-      partNumber: 'CV-9910-INCONEL',
-      batchId: 'BATCH-2024-11C',
+      partId: 'QC-CRYOPUMP-88',
+      partNumber: 'PN-QPU-PUMP-88',
+      batchId: 'BATCH-2024-CRY-01',
       manufacturerOrgId: 'org-oem',
       currentOwnerOrgId: 'org-airline',
-      installedMachine: 'BOEING 777-300ER // F-GSQA',
+      installedMachine: 'Rigetti Quantum Supercluster // Dilution Stage',
       status: 'active',
-      warrantyUntil: '2029-06-30',
+      warrantyUntil: '2028-04-20',
       chainTxHash: '0x3a4b5c6d7e8f90123456789abcdef0123456789a',
       manufacturer: defaultOrgOEM,
       currentOwner: defaultOrgFleet,
     },
     {
       id: 'demo-3',
-      partId: 'LEAP-1B-BEARING-08',
-      partNumber: 'BRG-HYBRID-CR8',
-      batchId: 'BATCH-2024-04F',
+      partId: 'TITAN-TURBINE-X1',
+      partNumber: 'PN-HPT-STAGE1-TI',
+      batchId: 'BATCH-2024-HPT-04',
       manufacturerOrgId: 'org-oem',
       currentOwnerOrgId: 'org-airline',
-      installedMachine: 'AIRBUS A320neo // D-AINA',
+      installedMachine: 'Rolls-Royce Trent 1000 // Flight MSN-208',
       status: 'active',
-      warrantyUntil: '2027-09-15',
+      warrantyUntil: '2028-12-31',
       chainTxHash: '0x7e8f90123456789abcdef0123456789abcdef012',
       manufacturer: defaultOrgOEM,
       currentOwner: defaultOrgFleet,
     },
+    {
+      id: 'demo-4',
+      partId: 'LIDAR-PHOENIX-4D',
+      partNumber: 'PN-PHX-4D-09',
+      batchId: 'BATCH-2024-OPTO-02',
+      manufacturerOrgId: 'org-oem',
+      currentOwnerOrgId: 'org-airline',
+      installedMachine: 'General Atomics MQ-9B // Pod A',
+      status: 'active',
+      warrantyUntil: '2027-08-30',
+      chainTxHash: '0x5c6d7e8f90123456789abcdef0123456789abcdef',
+      manufacturer: defaultOrgOEM,
+      currentOwner: defaultOrgFleet,
+    },
+    {
+      id: 'demo-5',
+      partId: 'SIC-INVERTER-800V',
+      partNumber: 'PN-SIC-INV-800',
+      batchId: 'BATCH-2024-POW-03',
+      manufacturerOrgId: 'org-oem',
+      currentOwnerOrgId: 'org-airline',
+      installedMachine: 'Ferrari 499P Le Mans // MGU-K',
+      status: 'active',
+      warrantyUntil: '2026-11-10',
+      chainTxHash: '0x1a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d',
+      manufacturer: defaultOrgOEM,
+      currentOwner: defaultOrgFleet,
+    },
+    {
+      id: 'demo-6',
+      partId: 'CERAMIC-ROTOR-Z',
+      partNumber: 'PN-CRMC-ROT-07',
+      batchId: 'BATCH-2024-HYP-09',
+      manufacturerOrgId: 'org-oem',
+      currentOwnerOrgId: 'org-airline',
+      installedMachine: 'Lockheed Martin SR-72 Scramjet Ingestion',
+      status: 'active',
+      warrantyUntil: '2029-01-15',
+      chainTxHash: '0x9e8d7c6b5a40392817a6b5c4d3e2f1098a7b6c5d',
+      manufacturer: defaultOrgOEM,
+      currentOwner: defaultOrgFleet,
+    },
   ];
+
+  const sampleParts: Part[] = parts.length > 0 ? parts.slice(0, 6) : defaultSampleParts;
 
   const [selectedSamplePart, setSelectedSamplePart] = useState<Part>(sampleParts[0]);
   const [isVerifyingScan, setIsVerifyingScan] = useState(false);
   const [verificationSuccess, setVerificationSuccess] = useState(true);
 
   const getProductDetails = (part: Part) => {
-    const isValve = part.partId.includes('VALVE') || part.partNumber.includes('VALVE') || part.partNumber.includes('CV');
-    const isBearing = part.partId.includes('BEARING') || part.partNumber.includes('BRG');
-
-    if (isValve) {
-      return {
-        manufactureDate: '18-MAY-2024 // 14:15 UTC',
-        manufactureFacility: 'Titanium Precision Micro-Forging (Bavaria)',
-        cageCode: 'CAGE: C4921 / NSN: 4820-01-612-4401',
-        warrantyUntil: part.warrantyUntil || '2029-06-30',
-        warrantyStatus: 'ACTIVE // 100% COVERAGE',
-        warrantyDaysRemaining: 1005,
-        warrantyCoverage: '100% Comprehensive OEM Valve & Seal Escrow Replacement',
-        materialSpec: 'Inconel 718 Superalloy (AMS 5596 / ASTM B637)',
-        heatTreatment: 'Solution Annealed 980°C + Double Precipitation Aged',
-        flightHours: 1820,
-        lifeLimitHours: 15000,
-        flightCycles: 450,
-        maxFlightCycles: 4000,
-        operatingTempRange: '-253°C Cryogenic to +700°C',
-        maxPressureMpa: 450,
-        ndtUltrasonic: 'Class AA Immersion - 0 Inclusions',
-        ndtXray: 'Computed Micro-Tomography Passed',
-        ndtCMM: '±0.0010 mm Geometric Tolerance',
-        nextInspectionDue: '12-NOV-2027',
-        installedPosition: 'Boeing 777-300ER // GE90 Fuel Metering Manifold',
-        pufHardwareId: '#PUF-718-CRYO-VALVE-44',
-        airworthinessStandards: 'FAA 8130-3 / EASA Form 1 / AS9100D Rev D',
-      };
-    }
-
-    if (isBearing) {
-      return {
-        manufactureDate: '09-FEB-2024 // 09:40 UTC',
-        manufactureFacility: 'Hexcel Advanced Composites & Nano (Zurich)',
-        cageCode: 'CAGE: H7812 / NSN: 3110-01-499-1022',
-        warrantyUntil: part.warrantyUntil || '2027-09-15',
-        warrantyStatus: 'ACTIVE // 100% COVERAGE',
-        warrantyDaysRemaining: 534,
-        warrantyCoverage: 'OEM Tier-1 Rolling Element Replacement Indemnity',
-        materialSpec: 'Silicon Nitride (Si3N4) Ceramic Hybrid + Cronidur 30 Steel',
-        heatTreatment: 'Hot Isostatic Pressed (HIP) at 1,750°C / 200 MPa',
-        flightHours: 3100,
-        lifeLimitHours: 25000,
-        flightCycles: 920,
-        maxFlightCycles: 8000,
-        operatingTempRange: '-60°C to +450°C (High-Speed Spool)',
-        maxPressureMpa: 720,
-        ndtUltrasonic: 'Resonant Acoustic Method (RAM) Passed',
-        ndtXray: 'Fluorescent Penetrant Inspection Level 4',
-        ndtCMM: '±0.0008 mm Sphericity Validated',
-        nextInspectionDue: '30-OCT-2026',
-        installedPosition: 'Airbus A320neo // LEAP-1B High-Pressure Core Bearing #3',
-        pufHardwareId: '#PUF-CR8-HYBRID-BRG-08',
-        airworthinessStandards: 'FAA 8130-3 / EASA Form 1 / AS9100D Rev D',
-      };
-    }
-
-    // Default: Titanium Turbofan Rotor Assembly / Blade
+    const meta = getProductMetadata(part.partId, part);
     return {
-      manufactureDate: '14-MAR-2024 // 08:30 UTC',
-      manufactureFacility: 'Apex Aerospace Technologies (Munich)',
-      cageCode: 'CAGE: C4921 / NSN: 2840-01-529-8812',
-      warrantyUntil: part.warrantyUntil || '2028-12-31',
-      warrantyStatus: 'ACTIVE // 100% COVERAGE',
-      warrantyDaysRemaining: 824,
-      warrantyCoverage: '100% Comprehensive OEM Metallurgical & In-Flight Escrow',
-      materialSpec: 'Ti-6Al-4V Grade 5 Alpha-Beta Alloy (AMS 4911 / ASTM B265)',
-      heatTreatment: 'Vacuum Annealed 730°C / Rapid Argon Gas Quenched',
-      flightHours: 4820,
-      lifeLimitHours: 20000,
-      flightCycles: 1240,
-      maxFlightCycles: 6000,
-      operatingTempRange: '-65°C Continuous to +1,650°C Peak',
-      maxPressureMpa: 850,
-      ndtUltrasonic: 'Zero Voids / Ra 0.18 Sub-Surface Integrity',
-      ndtXray: 'High-Energy Industrial CT Volumetric Scan Passed',
-      ndtCMM: '±0.0015 mm Coordinate Measuring Validated',
-      nextInspectionDue: '18-APR-2027',
-      installedPosition: 'Boeing 737-800 // Tail N782AA (Left CFM56 Nacelle, Pos #1)',
-      pufHardwareId: '#PUF-9021-X-TITAN',
-      airworthinessStandards: 'FAA 8130-3 / EASA Form 1 / AS9100D Rev D',
+      manufactureDate: meta.manufactureDate,
+      manufactureFacility: meta.manufacturePlant,
+      cageCode: meta.cageCode,
+      warrantyUntil: meta.warrantyUntil,
+      warrantyStatus: meta.warrantyStatus,
+      warrantyDaysRemaining: meta.warrantyDaysRemaining,
+      warrantyCoverage: meta.warrantySLA,
+      materialSpec: `${meta.metallurgyAlloy} (${meta.alloyStandard})`,
+      heatTreatment: meta.heatTreatment,
+      flightHours: meta.operatingHours,
+      lifeLimitHours: meta.ratedLifeHours,
+      flightCycles: meta.operatingDutyCycles,
+      maxFlightCycles: meta.maxDutyCycles,
+      operatingTempRange: meta.operatingTempLabel,
+      maxPressureMpa: meta.operatingPressureMpa,
+      ndtUltrasonic: meta.ndtUltrasonic,
+      ndtXray: meta.ndtXray,
+      ndtCMM: meta.ndtCMM,
+      nextInspectionDue: meta.nextInspectionDue,
+      installedPosition: part.installedMachine || meta.installedPosition,
+      pufHardwareId: meta.pufHardwareId,
+      airworthinessStandards: meta.standards,
+      subsystems: meta.subsystems,
     };
   };
 
-  const digitalTwinSpecs = getProductDetails(sampleParts[0]);
+  const digitalTwinSpecs = getProductDetails(selectedSamplePart);
   const activeSelectedSpecs = getProductDetails(selectedSamplePart);
 
   const handleSimulateVerify = (part: Part) => {
@@ -363,16 +352,16 @@ export default function LandingPageExperience({
         <div className="digital-twin-stage-card">
           <div className="twin-stage-header">
             <div className="twin-stage-meta">
-              <span className="twin-stage-title">CFM56-HPT-0921 // High-Pressure Titanium Rotor Assembly</span>
-              <span className="twin-stage-hash">ROOT: 0x8f2d...e8a1</span>
+              <span className="twin-stage-title">{selectedSamplePart.partId} // {selectedSamplePart.installedMachine || selectedSamplePart.partNumber}</span>
+              <span className="twin-stage-hash">ROOT: {selectedSamplePart.chainTxHash ? `${selectedSamplePart.chainTxHash.slice(0, 6)}...${selectedSamplePart.chainTxHash.slice(-4)}` : '0x8f2d...e8a1'}</span>
             </div>
 
             <div style={{ display: 'flex', gap: 10 }}>
               <span className="mode-toggle-btn active" style={{ cursor: 'default' }}>
-                METALLURGY: Ti-6Al-4V GRADE 5
+                METALLURGY: {digitalTwinSpecs.materialSpec.slice(0, 24)}...
               </span>
               <span className="mode-toggle-btn active" style={{ cursor: 'default', color: 'var(--accent-emerald)' }}>
-                AS9100D CERTIFIED
+                {digitalTwinSpecs.airworthinessStandards.split('/')[0].trim()} CERTIFIED
               </span>
             </div>
           </div>
@@ -426,7 +415,7 @@ export default function LandingPageExperience({
                 <FileText size={15} weight="bold" color="var(--accent-cyan)" />
                 Fabrication & Dates
               </span>
-              <span className="passport-card-tag">BATCH LOT 08A</span>
+              <span className="passport-card-tag">{selectedSamplePart.batchId}</span>
             </div>
             <div className="passport-spec-list">
               <div className="passport-spec-item">
@@ -459,7 +448,7 @@ export default function LandingPageExperience({
                 <Cpu size={15} weight="bold" color="var(--accent-cyan)" />
                 Metallurgy & Material
               </span>
-              <span className="passport-card-tag">AMS 4911</span>
+              <span className="passport-card-tag">{digitalTwinSpecs.materialSpec.includes('AMS') ? 'AMS CERTIFIED' : 'AEROSPACE GRADE'}</span>
             </div>
             <div className="passport-spec-list">
               <div className="passport-spec-item">
@@ -577,7 +566,7 @@ export default function LandingPageExperience({
                 SELECT ACTIVE TEST SPECIMEN
               </span>
               <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.68rem', color: 'var(--text-muted)' }}>
-                3 SPECIMENS REGISTERED
+                {sampleParts.length} SPECIMENS REGISTERED
               </span>
             </div>
 
